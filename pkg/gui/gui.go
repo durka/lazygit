@@ -22,10 +22,12 @@ import (
 	"github.com/jesseduffield/lazygit/pkg/commands/models"
 	"github.com/jesseduffield/lazygit/pkg/commands/oscommands"
 	"github.com/jesseduffield/lazygit/pkg/common"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers"
 	"github.com/jesseduffield/lazygit/pkg/config"
 	"github.com/jesseduffield/lazygit/pkg/gocui"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
 	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
+	"github.com/jesseduffield/lazygit/pkg/gui/filetree"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/cherrypicking"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/diffing"
 	"github.com/jesseduffield/lazygit/pkg/gui/modes/filtering"
@@ -506,6 +508,28 @@ func (gui *Gui) onUserConfigLoaded() error {
 	} else {
 		// Fall back to the deprecated branchColors config
 		presentation.SetCustomBranches(userConfig.Gui.BranchColors, false)
+	}
+
+	if gui.State != nil {
+		// HACK: This is basically a copy paste of FilesController.setStatusFiltering.
+		//       It would be better if there was a way to access the controller from here.
+		//       Or maybe the context needs to have a list of OnConfigUpdated callbacks?
+
+		previousFilter := gui.State.Contexts.Files.FileTreeViewModel.IFileTree.GetStatusFilter()
+		newFilter := filetree.FileTreeDisplayFilterFromString(userConfig.Gui.FilesViewFiltering)
+		if previousFilter != newFilter {
+			gui.State.Contexts.Files.FileTreeViewModel.IFileTree.SetStatusFilter(newFilter)
+			gui.State.Contexts.Files.GetView().Subtitle = filetree.FileTreeDisplayFilterLabel(gui.Common, newFilter)
+
+			// Whenever we switch between untracked and other filters, we need to refresh the files view
+			// because the untracked files filter applies when running `git status`.
+			cc := controllers.NewControllerCommon(gui.c, gui)
+			if previousFilter == filetree.DisplayUntracked || newFilter == filetree.DisplayUntracked {
+				cc.Refresh(types.RefreshOptions{Scope: []types.RefreshableView{types.FILES}, Mode: types.ASYNC})
+			} else {
+				cc.PostRefreshUpdate(gui.State.Contexts.Files)
+			}
+		}
 	}
 
 	return nil
