@@ -21,6 +21,23 @@ const (
 	DisplayConflicted
 )
 
+func FileTreeDisplayFilterFromString(s string) FileTreeDisplayFilter {
+	switch s {
+	case "none":
+		return DisplayAll
+	case "staged":
+		return DisplayStaged
+	case "unstaged":
+		return DisplayUnstaged
+	case "tracked":
+		return DisplayTracked
+	case "untracked":
+		return DisplayUntracked
+	default:
+		panic(fmt.Sprintf("Unknown files display filter: %s", s))
+	}
+}
+
 type ITree[T any] interface {
 	InTreeMode() bool
 	ExpandToPath(path string)

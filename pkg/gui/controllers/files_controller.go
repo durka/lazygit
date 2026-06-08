@@ -28,7 +28,7 @@ var _ types.IController = &FilesController{}
 func NewFilesController(
 	c *ControllerCommon,
 ) *FilesController {
-	return &FilesController{
+	fc := &FilesController{
 		c: c,
 		ListControllerTrait: NewListControllerTrait(
 			c,
@@ -37,6 +37,8 @@ func NewFilesController(
 			c.Contexts().Files.GetSelectedItems,
 		),
 	}
+	fc.setStatusFiltering(filetree.FileTreeDisplayFilterFromString(c.UserConfig().Gui.FilesViewFiltering))
+	return fc
 }
 
 func (self *FilesController) GetKeybindings(opts types.KeybindingsOpts) []*types.Binding {
