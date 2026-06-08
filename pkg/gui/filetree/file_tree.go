@@ -38,6 +38,25 @@ func FileTreeDisplayFilterFromString(s string) FileTreeDisplayFilter {
 	}
 }
 
+func FileTreeDisplayFilterLabel(c *common.Common, filter FileTreeDisplayFilter) string {
+	switch filter {
+	case DisplayAll:
+		return ""
+	case DisplayStaged:
+		return c.Tr.FilterLabelStagedFiles
+	case DisplayUnstaged:
+		return c.Tr.FilterLabelUnstagedFiles
+	case DisplayTracked:
+		return c.Tr.FilterLabelTrackedFiles
+	case DisplayUntracked:
+		return c.Tr.FilterLabelUntrackedFiles
+	case DisplayConflicted:
+		return c.Tr.FilterLabelConflictingFiles
+	}
+
+	panic(fmt.Sprintf("Unexpected files display filter: %d", filter))
+}
+
 type ITree[T any] interface {
 	InTreeMode() bool
 	ExpandToPath(path string)
